@@ -1,5 +1,5 @@
 import { registerAs } from "@nestjs/config";
-import joi from "joi";
+import * as joi from "joi";
 
 export const jwtSchema = {
 	JWT_SECRET: joi.string().required(),

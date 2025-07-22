@@ -1,11 +1,12 @@
 import { Body, Controller, HttpCode, HttpStatus, Post } from "@nestjs/common";
+import { ApiBody, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
+import { CreateUserDto } from "src/users/dto/create-user.dto";
 import { AuthService } from "./auth.service";
 import { Auth } from "./decorators/auth.decorator";
 import { GoogleTokenDto } from "./dtos/googleToken.dto";
 import { LoginDto } from "./dtos/login.dto";
 import { AuthType } from "./enums/authType.enum";
-import { ApiTags, ApiOperation, ApiResponse } from "@nestjs/swagger";
-import { CreateUserDto } from "src/users/dto/create-user.dto";
+import { ResetPasswordDto } from "./dtos/reset-password.dto";
 
 @Controller("auth")
 @Auth(AuthType.NONE)
@@ -117,5 +118,47 @@ export class AuthController {
 	})
 	public async register(@Body() createUserDto: CreateUserDto) {
 		return this.authService.register(createUserDto);
+	}
+
+	@Post("/reset-password")
+	@ApiOperation({ summary: "Reset user password" })
+	@ApiResponse({
+		status: 200,
+		description: "Password successfully reset.",
+		type: Object,
+	})
+	@ApiResponse({ status: 404, description: "User not found." })
+	@ApiResponse({
+		status: 400,
+		description: "Invalid password or other validation error.",
+	})
+	@ApiBody({
+		type: ResetPasswordDto,
+		description: "Payload for resetting password",
+	})
+	public async resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
+		return this.authService.resetPassword(
+			resetPasswordDto.password,
+			resetPasswordDto.email
+		);
+	}
+
+	@Post("/forget-password")
+	@ApiOperation({ summary: "Request a password reset email" })
+	@ApiResponse({
+		status: 200,
+		description: "Password reset email sent successfully.",
+	})
+	@ApiResponse({ status: 404, description: "User not found." })
+	@ApiBody({
+		schema: {
+			type: "string",
+			example: "user@example.com",
+			description: "The email address of the user who forgot their password",
+		},
+		description: "Email address to send the password reset link to",
+	})
+	public async forgetPassword(@Body() email: string) {
+		return this.authService.forgetPassword(email);
 	}
 }

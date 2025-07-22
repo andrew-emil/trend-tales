@@ -1,5 +1,5 @@
 import { Inject, Injectable } from "@nestjs/common";
-import { Model } from "mongoose";
+import { FindOptionsWhere, ObjectLiteral, Repository } from "typeorm";
 import { PaginationDto } from "./dtos/pagination.dto";
 import { REQUEST } from "@nestjs/core";
 import { Paginated } from "./interface/paginated.interface";
@@ -13,21 +13,18 @@ export class PaginationService {
 	) {}
 
 	public async paginate<T>(
-		model: Model<T>,
+		model: Repository<ObjectLiteral>,
 		paginationQuery: PaginationDto,
-	): Promise<Paginated<T>> {
-		const { limit, page, select, populate } = paginationQuery;
+		where: FindOptionsWhere<T>
+	): Promise<Paginated> {
+		const { limit, page } = paginationQuery;
 		const skip = (page! - 1) * limit!;
 
-		const result = await model
-			.find(paginationQuery.where ?? {})
-			.sort(paginationQuery.sort ?? {})
-			.skip(skip)
-			.limit(limit!)
-			.select(select ?? "")
-			.populate(populate ?? "");
-
-		const totalItems = await model.countDocuments(paginationQuery.where ?? {});
+		const [result, totalItems] = await model.findAndCount({
+			where,
+			skip,
+			take: limit,
+		});
 		const totalPages = Math.ceil(totalItems / paginationQuery.limit!);
 		const nextPage =
 			paginationQuery.page === totalPages
@@ -42,7 +39,7 @@ export class PaginationService {
 		const baseUrl = `${this.request.protocol}://${this.request.get("host")}`;
 		const url = new URL(this.request.url, baseUrl);
 
-		const response: Paginated<T> = {
+		const response: Paginated = {
 			data: result,
 			meta: {
 				itemsPerPage: paginationQuery.limit!,

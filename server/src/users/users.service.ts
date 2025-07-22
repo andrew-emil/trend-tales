@@ -66,12 +66,28 @@ export class UsersService {
 	}
 
 	async updateUser(updateUserDto: UpdateUserDto) {
-		//TODO: hash password
+		const user = await this.usersRepository.findOneBy({
+			id: updateUserDto.id,
+		});
+		if (!user) throw new NotFoundException("User Not found");
+		let hashedPassword = "";
+
+		if (updateUserDto.password) {
+			hashedPassword = await this.bcryptProvider.hashPassword(
+				updateUserDto.password
+			);
+		} else {
+			hashedPassword = user.password_hash ?? "";
+		}
+
 		return await this.usersRepository.update(
 			{
 				id: updateUserDto.id,
 			},
-			updateUserDto
+			{
+				...updateUserDto,
+				password_hash: hashedPassword,
+			}
 		);
 	}
 

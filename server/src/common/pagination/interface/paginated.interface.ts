@@ -1,12 +1,14 @@
-export interface Paginated<T> {
-    data: T[];
-    meta: {
+import { ObjectLiteral } from "typeorm";
+
+export interface Paginated {
+	data: ObjectLiteral[];
+	meta: {
 		itemsPerPage: number;
 		totalItems: number;
 		currentPage: number;
 		totalPages: number;
 	};
-    links: {
+	links: {
 		first: string;
 		last: string;
 		next: string;

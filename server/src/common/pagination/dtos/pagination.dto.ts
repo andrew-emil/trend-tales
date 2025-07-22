@@ -1,14 +1,8 @@
-import { Type } from "class-transformer";
-import {
-	IsArray,
-	IsObject,
-	IsOptional,
-	IsPositive,
-	IsString,
-	ValidateNested,
-} from "class-validator";
-import { SortOrder } from "mongoose";
 import { ApiPropertyOptional } from "@nestjs/swagger";
+import {
+	IsOptional,
+	IsPositive
+} from "class-validator";
 
 export class PaginationDto {
 	@ApiPropertyOptional({
@@ -30,43 +24,4 @@ export class PaginationDto {
 	@IsOptional()
 	@IsPositive()
 	page?: number = 1;
-
-	@ApiPropertyOptional({
-		description: "Fields to select in the response",
-		type: [String],
-		example: ["name", "description"],
-	})
-	@IsOptional()
-	@IsArray()
-	@ValidateNested({ each: true })
-	@Type(() => String)
-	select?: string[];
-
-	@ApiPropertyOptional({
-		description: "Related fields to populate",
-		example: "category",
-	})
-	@IsOptional()
-	@IsString()
-	populate?: string;
-
-	@ApiPropertyOptional({
-		description: "Filter conditions",
-		example: { status: "active", type: "movie" },
-	})
-	@IsObject()
-	@IsOptional()
-	@ValidateNested()
-	@Type(() => Object)
-	where?: Record<string, any>;
-
-	@ApiPropertyOptional({
-		description: "Sort criteria",
-		example: { createdAt: -1, name: 1 },
-	})
-	@IsObject()
-	@IsOptional()
-	@ValidateNested()
-	@Type(() => Object)
-	sort?: Record<string, SortOrder>;
 }

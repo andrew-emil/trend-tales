@@ -16,6 +16,7 @@ import { GoogleTokenDto } from "./dtos/googleToken.dto";
 import { LoginDto } from "./dtos/login.dto";
 import { BcryptProvider } from "./providers/bcrypt.provider";
 import { GenerateTokenProvider } from "./providers/generate-token.provider";
+import { MailsService } from "src/mails/mails.service";
 
 @Injectable()
 export class AuthService implements OnModuleInit {
@@ -26,7 +27,8 @@ export class AuthService implements OnModuleInit {
 		private readonly bcryptProvider: BcryptProvider,
 		private readonly generateTokenProvider: GenerateTokenProvider,
 		@Inject(jwtConfig.KEY)
-		private readonly jwtConfiguration: ConfigType<typeof jwtConfig>
+		private readonly jwtConfiguration: ConfigType<typeof jwtConfig>,
+		private readonly mailsService: MailsService
 	) {}
 	onModuleInit() {
 		this.oAuthClient = new OAuth2Client(
@@ -36,7 +38,7 @@ export class AuthService implements OnModuleInit {
 	}
 
 	public async login(loginDto: LoginDto) {
-		const user = await this.usersService.findUserByEmail(loginDto.email)
+		const user = await this.usersService.findUserByEmail(loginDto.email);
 
 		if (!user) throw new NotFoundException("User not found");
 
@@ -86,12 +88,12 @@ export class AuthService implements OnModuleInit {
 		}
 		try {
 			const fullName = `${firstName ?? ""} ${lastName ?? ""}`.trim();
-			const newUser = await this.usersService.createUser({
+			const dto = {
 				email: email ?? "",
 				fullName,
-				password: Math.random().toString(36).slice(-8),
-				google_id: googleId,
-			});
+				google_id: googleTokenDto.token,
+			} as CreateUserDto;
+			const newUser = await this.usersService.createUser(dto);
 			return {
 				accessToken: await this.generateTokenProvider.generateAccessToken(
 					newUser.id,
@@ -109,10 +111,36 @@ export class AuthService implements OnModuleInit {
 	public async register(createUserDto: CreateUserDto) {
 		const user = await this.usersService.createUser(createUserDto);
 
+		await this.mailsService.sendWelcomeEmail(user);
+
 		return await this.generateTokenProvider.generateAccessToken(
 			user.id,
 			user.email,
 			user.fullName
 		);
+	}
+
+	public async forgetPassword(email: string) {
+		const user = await this.usersService.findUserByEmail(email);
+		if (!user) throw new NotFoundException("User Not found");
+
+		await this.mailsService.sendResetPasswordEmail(email, user.fullName);
+
+		return "We have sent you an email for reset the password";
+	}
+
+	public async resetPassword(password: string, email: string) {
+		if (password.trim() === "")
+			throw new BadRequestException("Invalid password");
+
+		const user = await this.usersService.findUserByEmail(email);
+		if (!user) throw new NotFoundException("User Not found");
+
+		const updatedUser = await this.usersService.updateUser({
+			id: user.id,
+			password,
+		});
+
+		return updatedUser;
 	}
 }

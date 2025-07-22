@@ -7,12 +7,15 @@ import { AuthModule } from "./auth/auth.module";
 import { PaginationModule } from "./common/pagination/pagination.module";
 import databaseConfig from "./config/database.config";
 import { UsersModule } from "./users/users.module";
+import { MailsModule } from "./mails/mails.module";
+import jwtConfig from "./config/jwt.config";
 
 @Module({
 	imports: [
 		ConfigModule.forRoot({
 			isGlobal: true,
-			load: [databaseConfig],
+			envFilePath: ".env",
+			load: [databaseConfig, jwtConfig, ],
 		}),
 		TypeOrmModule.forRootAsync({
 			imports: [ConfigModule],
@@ -31,6 +34,7 @@ import { UsersModule } from "./users/users.module";
 		AuthModule,
 		PaginationModule,
 		UsersModule,
+		MailsModule,
 	],
 	controllers: [AppController],
 	providers: [AppService],
