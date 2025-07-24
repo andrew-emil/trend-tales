@@ -1,4 +1,6 @@
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { Blog } from "src/blogs/entities/blog.entity";
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
+import { Comment } from "src/comments/entities/comment.entity";
 
 @Entity()
 export class User {
@@ -16,4 +18,10 @@ export class User {
 
 	@Column({ type: "varchar", nullable: true })
 	google_id?: string | null;
+
+	@OneToMany(() => Blog, (blog) => blog.user)
+	blog: Blog;
+
+	@OneToMany(() => Comment, (comment) => comment.user)
+	comment: Comment;
 }

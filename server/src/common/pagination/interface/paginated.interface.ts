@@ -1,7 +1,5 @@
-import { ObjectLiteral } from "typeorm";
-
-export interface Paginated {
-	data: ObjectLiteral[];
+export interface Paginated<T> {
+	data: T[];
 	meta: {
 		itemsPerPage: number;
 		totalItems: number;

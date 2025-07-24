@@ -1,9 +1,16 @@
 import { Inject, Injectable } from "@nestjs/common";
-import { FindOptionsWhere, ObjectLiteral, Repository } from "typeorm";
-import { PaginationDto } from "./dtos/pagination.dto";
 import { REQUEST } from "@nestjs/core";
-import { Paginated } from "./interface/paginated.interface";
 import { Request } from "express";
+import {
+	FindOptionsOrder,
+	FindOptionsRelations,
+	FindOptionsSelect,
+	FindOptionsWhere,
+	ObjectLiteral,
+	Repository,
+} from "typeorm";
+import { PaginationDto } from "./dtos/pagination.dto";
+import { Paginated } from "./interface/paginated.interface";
 
 @Injectable()
 export class PaginationService {
@@ -12,11 +19,14 @@ export class PaginationService {
 		private readonly request: Request
 	) {}
 
-	public async paginate<T>(
-		model: Repository<ObjectLiteral>,
+	public async paginate<T extends ObjectLiteral>(
+		model: Repository<T>,
 		paginationQuery: PaginationDto,
-		where: FindOptionsWhere<T>
-	): Promise<Paginated> {
+		where?: FindOptionsWhere<T>,
+		sort?: FindOptionsOrder<T>,
+		relations?: FindOptionsRelations<T>,
+		select?: FindOptionsSelect<T>
+	): Promise<Paginated<T>> {
 		const { limit, page } = paginationQuery;
 		const skip = (page! - 1) * limit!;
 
@@ -24,7 +34,11 @@ export class PaginationService {
 			where,
 			skip,
 			take: limit,
+			order: sort,
+			relations,
+			select,
 		});
+
 		const totalPages = Math.ceil(totalItems / paginationQuery.limit!);
 		const nextPage =
 			paginationQuery.page === totalPages
@@ -39,7 +53,7 @@ export class PaginationService {
 		const baseUrl = `${this.request.protocol}://${this.request.get("host")}`;
 		const url = new URL(this.request.url, baseUrl);
 
-		const response: Paginated = {
+		const response: Paginated<T> = {
 			data: result,
 			meta: {
 				itemsPerPage: paginationQuery.limit!,

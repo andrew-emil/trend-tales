@@ -8,14 +8,19 @@ import { PaginationModule } from "./common/pagination/pagination.module";
 import databaseConfig from "./config/database.config";
 import { UsersModule } from "./users/users.module";
 import { MailsModule } from "./mails/mails.module";
+import { BlogsModule } from './blogs/blogs.module';
+import { CommentsModule } from './comments/comments.module';
 import jwtConfig from "./config/jwt.config";
+import { APP_GUARD } from "@nestjs/core";
+import { AuthGuard } from "./auth/guards/auth.guard";
+import { AccessTokenGuard } from "./auth/guards/access-token.guard";
 
 @Module({
 	imports: [
 		ConfigModule.forRoot({
 			isGlobal: true,
 			envFilePath: ".env",
-			load: [databaseConfig, jwtConfig, ],
+			load: [databaseConfig, jwtConfig],
 		}),
 		TypeOrmModule.forRootAsync({
 			imports: [ConfigModule],
@@ -35,8 +40,17 @@ import jwtConfig from "./config/jwt.config";
 		PaginationModule,
 		UsersModule,
 		MailsModule,
+		BlogsModule,
+		CommentsModule,
 	],
 	controllers: [AppController],
-	providers: [AppService],
+	providers: [
+		AppService,
+		{
+			provide: APP_GUARD,
+			useClass: AuthGuard,
+		},
+		AccessTokenGuard,
+	],
 })
 export class AppModule {}
