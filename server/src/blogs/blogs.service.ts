@@ -105,13 +105,16 @@ export class BlogsService {
 			query,
 			undefined,
 			{ created_at: "DESC" },
-			undefined,
+			{ comment: true, user: true },
 			{
 				id: true,
 				title: true,
 				thumbnail: true,
 				created_at: true,
 				tags: true,
+				likes: true,
+				comment: true,
+				user: true,
 			}
 		);
 

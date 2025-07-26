@@ -5,51 +5,42 @@ import {
 	Get,
 	HttpCode,
 	HttpStatus,
-	Param,
-	Patch,
+	Patch
 } from "@nestjs/common";
-import { UpdateUserDto } from "./dto/update-user.dto";
-import { UsersService } from "./users.service";
 import {
-	ApiTags,
+	ApiBody,
 	ApiOperation,
 	ApiResponse,
-	ApiParam,
-	ApiBody,
+	ApiTags
 } from "@nestjs/swagger";
+import { ActiveUser } from "src/auth/decorators/active-user.decorator";
+import { Auth } from "src/auth/decorators/auth.decorator";
+import { AuthType } from "src/auth/enums/authType.enum";
+import { UserPayload } from "src/auth/interfaces/user.interface";
+import { UpdateUserDto } from "./dto/update-user.dto";
 import { User } from "./entities/user.entity";
+import { UsersService } from "./users.service";
 
 @ApiTags("users")
 @Controller("users")
+@Auth(AuthType.BEARER)
 export class UsersController {
 	constructor(private readonly usersService: UsersService) {}
 
-	@Get(":id")
+	@Get()
 	@ApiOperation({ summary: "Retrieve a single user by ID" })
-	@ApiParam({
-		name: "id",
-		description: "The ID of the user",
-		type: String,
-		example: "1",
-	})
 	@ApiResponse({
 		status: 200,
 		description: "User found and returned successfully",
 		type: User,
 	})
 	@ApiResponse({ status: 404, description: "User not found" })
-	findOne(@Param("id") id: string) {
-		return this.usersService.findUserById(+id);
+	findOne(@ActiveUser() user: UserPayload) {
+		return this.usersService.findUserById(user.sub);
 	}
 
-	@Patch(":id")
+	@Patch()
 	@ApiOperation({ summary: "Update an existing user by ID" })
-	@ApiParam({
-		name: "id",
-		description: "The ID of the user to update",
-		type: String,
-		example: "1",
-	})
 	@ApiBody({ type: UpdateUserDto, description: "Partial user data to update" })
 	@ApiResponse({
 		status: 200,
@@ -61,22 +52,19 @@ export class UsersController {
 		status: 400,
 		description: "Invalid input or validation error",
 	})
-	update(@Param("id") id: string, @Body() updateUserDto: UpdateUserDto) {
-		return this.usersService.updateUser(updateUserDto);
+	update(
+		@ActiveUser() user: UserPayload,
+		@Body() updateUserDto: UpdateUserDto
+	) {
+		return this.usersService.updateUser(user.sub, updateUserDto);
 	}
 
-	@Delete(":id")
+	@Delete()
 	@HttpCode(HttpStatus.NO_CONTENT)
 	@ApiOperation({ summary: "Delete a user by ID" })
-	@ApiParam({
-		name: "id",
-		description: "The ID of the user to delete",
-		type: String,
-		example: "1",
-	})
 	@ApiResponse({ status: 204, description: "No content" })
 	@ApiResponse({ status: 404, description: "User not found" })
-	remove(@Param("id") id: string) {
-		return this.usersService.deleteUser(+id);
+	remove(@ActiveUser() user: UserPayload) {
+		return this.usersService.deleteUser(user.sub);
 	}
 }

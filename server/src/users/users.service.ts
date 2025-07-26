@@ -65,9 +65,9 @@ export class UsersService {
 		return await this.usersRepository.save(newUser);
 	}
 
-	async updateUser(updateUserDto: UpdateUserDto) {
+	async updateUser(userId: number, updateUserDto: UpdateUserDto) {
 		const user = await this.usersRepository.findOneBy({
-			id: updateUserDto.id,
+			id: userId,
 		});
 		if (!user) throw new NotFoundException("User Not found");
 		let hashedPassword = "";
@@ -82,7 +82,7 @@ export class UsersService {
 
 		return await this.usersRepository.update(
 			{
-				id: updateUserDto.id,
+				id: userId,
 			},
 			{
 				...updateUserDto,

@@ -1,4 +1,11 @@
-import { Body, Controller, HttpCode, HttpStatus, Post } from "@nestjs/common";
+import {
+	Body,
+	Controller,
+	HttpCode,
+	HttpStatus,
+	Patch,
+	Post,
+} from "@nestjs/common";
 import { ApiBody, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { CreateUserDto } from "src/users/dto/create-user.dto";
 import { AuthService } from "./auth.service";
@@ -120,7 +127,7 @@ export class AuthController {
 		return this.authService.register(createUserDto);
 	}
 
-	@Post("/reset-password")
+	@Patch("/reset-password")
 	@ApiOperation({ summary: "Reset user password" })
 	@ApiResponse({
 		status: 200,
@@ -137,10 +144,7 @@ export class AuthController {
 		description: "Payload for resetting password",
 	})
 	public async resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
-		return this.authService.resetPassword(
-			resetPasswordDto.password,
-			resetPasswordDto.email
-		);
+		return this.authService.resetPassword(resetPasswordDto);
 	}
 
 	@Post("/forget-password")

@@ -36,7 +36,14 @@ export class CommentsService {
 	}
 
 	async findAllCommentsByBlog(blog: Blog) {
-		const comments = await this.commentRepo.findBy({ blog });
+		const comments = await this.commentRepo.find({
+			where: {
+				blog,
+			},
+			relations: {
+				user: true,
+			},
+		});
 
 		return comments;
 	}

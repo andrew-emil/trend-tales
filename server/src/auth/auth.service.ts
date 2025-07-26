@@ -17,6 +17,7 @@ import { LoginDto } from "./dtos/login.dto";
 import { BcryptProvider } from "./providers/bcrypt.provider";
 import { GenerateTokenProvider } from "./providers/generate-token.provider";
 import { MailsService } from "src/mails/mails.service";
+import { ResetPasswordDto } from "./dtos/reset-password.dto";
 
 @Injectable()
 export class AuthService implements OnModuleInit {
@@ -56,9 +57,7 @@ export class AuthService implements OnModuleInit {
 			user.fullName
 		);
 
-		return {
-			accessToken,
-		};
+		return accessToken;
 	}
 
 	public async googleLogin(googleTokenDto: GoogleTokenDto) {
@@ -78,13 +77,11 @@ export class AuthService implements OnModuleInit {
 		const user = await this.usersService.findUserByGoogleId(googleId);
 
 		if (user) {
-			return {
-				accessToken: await this.generateTokenProvider.generateAccessToken(
-					user.id,
-					user.email,
-					user.fullName
-				),
-			};
+			return await this.generateTokenProvider.generateAccessToken(
+				user.id,
+				user.email,
+				user.fullName
+			);
 		}
 		try {
 			const fullName = `${firstName ?? ""} ${lastName ?? ""}`.trim();
@@ -94,13 +91,11 @@ export class AuthService implements OnModuleInit {
 				google_id: googleTokenDto.token,
 			} as CreateUserDto;
 			const newUser = await this.usersService.createUser(dto);
-			return {
-				accessToken: await this.generateTokenProvider.generateAccessToken(
-					newUser.id,
-					newUser.email,
-					newUser.fullName
-				),
-			};
+			return await this.generateTokenProvider.generateAccessToken(
+				newUser.id,
+				newUser.email,
+				newUser.fullName
+			);
 		} catch (err) {
 			throw new UnauthorizedException(err, {
 				description: "Could not create user with google",
@@ -129,16 +124,18 @@ export class AuthService implements OnModuleInit {
 		return "We have sent you an email for reset the password";
 	}
 
-	public async resetPassword(password: string, email: string) {
-		if (password.trim() === "")
+	public async resetPassword(resetPasswordDto: ResetPasswordDto) {
+		if (resetPasswordDto.password.trim() === "")
 			throw new BadRequestException("Invalid password");
 
-		const user = await this.usersService.findUserByEmail(email);
-		if (!user) throw new NotFoundException("User Not found");
+		const user = await this.usersService.findUserByEmail(
+			resetPasswordDto.email
+		);
+		if (!user || !user.password_hash)
+			throw new NotFoundException("User Not found");
 
-		const updatedUser = await this.usersService.updateUser({
-			id: user.id,
-			password,
+		const updatedUser = await this.usersService.updateUser(user.id, {
+			password: resetPasswordDto.password,
 		});
 
 		return updatedUser;

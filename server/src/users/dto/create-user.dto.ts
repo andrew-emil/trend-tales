@@ -25,10 +25,10 @@ export class CreateUserDto {
 		example: "SecurePass123!",
 		minLength: 6,
 	})
-	@IsNotEmpty()
+	@IsOptional()
 	@IsString()
 	@MinLength(6, { message: "Password must be at least 6 characters long" })
-	password: string;
+	password?: string;
 
 	@ApiProperty({
 		description: "Optional Google ID if the user registered via Google",
